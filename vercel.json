@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/card.svg",
+      "destination": "/api/index.py?endpoint=card"
+    },
+    {
+      "source": "/badges.svg",
+      "destination": "/api/index.py?endpoint=badges"
+    },
+    {
+      "source": "/streak.svg",
+      "destination": "/api/index.py?endpoint=streak"
+    },
+    {
+      "source": "/api/card",
+      "destination": "/api/index.py?endpoint=card"
+    },
+    {
+      "source": "/api/badges",
+      "destination": "/api/index.py?endpoint=badges"
+    },
+    {
+      "source": "/api/streak",
+      "destination": "/api/index.py?endpoint=streak"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/index.py"
+    }
+  ]
+}
