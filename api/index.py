@@ -6,6 +6,7 @@ Endpoints:
 - /streak.svg         : LeetCode 3-column stats card with animated green streak ring
 - /github-heatmap.svg : Real-Time GitHub 53-week contribution calendar heatmap
 - /github-streak.svg  : Real-Time GitHub contributions streak card
+- /highlights.svg     : Real-Time terminal highlights card with live GitHub & LeetCode numbers
 - /                   : Interactive dark-mode preview & documentation
 """
 
@@ -644,6 +645,78 @@ def render_github_streak_svg(gh: dict, static: bool = False) -> str:
     return "\n".join(parts)
 
 
+def render_highlights_svg(gh: dict, lc: dict, static: bool = False) -> str:
+    gh_total = gh.get("total", 8000)
+    gh_streak = gh.get("current_streak", gh.get("longest_streak", 195))
+
+    lc_all = lc.get("solved", {}).get("All", 302)
+    lc_hard = lc.get("solved", {}).get("Hard", 68)
+    lc_streak = lc.get("calendar", {}).get("max_streak", 155)
+
+    lines = [
+        "Ensembyte: multi-agent client with Swift ∞ Hydra & GPUI CRDT engine",
+        "Orbit: lightweight device engine driving Claude Code, Cursor & Codex",
+        "SwarmAI: hybrid BM25 + dense n-gram memory for parallel worktrees",
+        "Credow: on-chain corporate credit allocation on Algorand with x402 vault",
+        f"Shipped {gh_total:,}+ GitHub contributions with {gh_streak}-day continuous streak",
+        f"LeetCode top tier: {lc_all} solved with {lc_hard} Hard problems & {lc_streak}-day max streak",
+    ]
+
+    W = 860
+    TITLE = "soumyachk101@github: ~/highlights.txt"
+    FS = 13.5
+    LH = 30.0
+    PAD_X = 24.0
+    BAR_H = 32.0
+    STAGGER = 0.22
+    FADE = 0.5
+    BAR = "#161b22"
+
+    height = round(BAR_H + 18 + len(lines) * LH + 12)
+
+    def anim(i: int) -> str:
+        if static:
+            return ""
+        begin = 0.2 + i * STAGGER
+        return (
+            f'<animate attributeName="opacity" from="0" to="1" '
+            f'begin="{begin:.2f}s" dur="{FADE}s" fill="freeze"/>'
+        )
+
+    op = "1" if static else "0"
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" '
+        f'height="{height}" viewBox="0 0 {W} {height}">',
+        f'<rect width="100%" height="100%" rx="8" fill="{BG}" '
+        f'stroke="{BORDER}" stroke-width="1"/>',
+        f'<path d="M1 9 a8 8 0 0 1 8-8 h{W - 18} a8 8 0 0 1 8 8 '
+        f'v{BAR_H - 9} h-{W - 2} z" fill="{BAR}"/>',
+        f'<line x1="1" y1="{BAR_H}" x2="{W - 1}" y2="{BAR_H}" '
+        f'stroke="{BORDER}" stroke-width="1"/>',
+        f'<circle cx="20" cy="{BAR_H / 2}" r="5" fill="#f85149"/>',
+        f'<circle cx="38" cy="{BAR_H / 2}" r="5" fill="#d29922"/>',
+        f'<circle cx="56" cy="{BAR_H / 2}" r="5" fill="{ACCENT}"/>',
+        f'<text x="{W / 2}" y="{BAR_H / 2 + FS * 0.34}" fill="{DIM}" '
+        f'font-family="{FONT}" font-size="{FS - 1.5}" '
+        f'text-anchor="middle">{escape(TITLE)}</text>',
+        f'<g font-family="{FONT}" font-size="{FS}">',
+    ]
+
+    y = BAR_H + 18 + LH * 0.6
+    for i, line in enumerate(lines):
+        parts.append(
+            f'<g opacity="{op}">'
+            f'<text x="{PAD_X}" y="{y:.1f}" fill="{ACCENT}" '
+            f'font-weight="bold">&#10095;</text>'
+            f'<text x="{PAD_X + 22}" y="{y:.1f}" fill="{INK}">'
+            f"{escape(line)}</text>{anim(i)}</g>"
+        )
+        y += LH
+
+    parts.append("</g></svg>")
+    return "\n".join(parts)
+
+
 def landing_page(host: str, username: str) -> str:
     proto = "https"
     base = f"{proto}://{host}"
@@ -709,6 +782,10 @@ def landing_page(host: str, username: str) -> str:
   <h3>5. GitHub Streak &amp; Volume Card (Real-Time)</h3>
   <pre>&lt;img src="{base}/github-streak.svg" width="860" /&gt;</pre>
   <div class="card-wrap"><img src="/github-streak.svg?user=soumyachk101" /></div>
+
+  <h3>6. Highlights Terminal Card (Real-Time)</h3>
+  <pre>&lt;img src="{base}/highlights.svg" width="860" /&gt;</pre>
+  <div class="card-wrap"><img src="/highlights.svg" /></div>
 </body>
 </html>"""
 
@@ -726,7 +803,7 @@ def app(environ, start_response):
     static = qs.get("static", ["0"])[0] == "1"
     endpoint = qs.get("endpoint", [""])[0]
 
-    # Check GitHub endpoints first to avoid 'streak' matching 'github-streak'
+    # Check GitHub & Highlights endpoints first to avoid 'streak' matching 'github-streak'
     if "github-heatmap" in path or endpoint == "github-heatmap":
         try:
             data = fetch_github_contributions(gh_user)
@@ -739,6 +816,15 @@ def app(environ, start_response):
         try:
             data = fetch_github_contributions(gh_user)
             svg = render_github_streak_svg(data, static=static)
+            return send_svg(svg, start_response)
+        except Exception as e:
+            return send_error(str(e), start_response)
+
+    elif "highlight" in path or endpoint == "highlights":
+        try:
+            gh_data = fetch_github_contributions(gh_user)
+            lc_data = fetch_leetcode(user)
+            svg = render_highlights_svg(gh_data, lc_data, static=static)
             return send_svg(svg, start_response)
         except Exception as e:
             return send_error(str(e), start_response)

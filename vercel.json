@@ -10,12 +10,24 @@
       "destination": "/api/index.py?endpoint=github-streak"
     },
     {
+      "source": "/highlights.svg",
+      "destination": "/api/index.py?endpoint=highlights"
+    },
+    {
+      "source": "/highlights-card.svg",
+      "destination": "/api/index.py?endpoint=highlights"
+    },
+    {
       "source": "/api/github-heatmap",
       "destination": "/api/index.py?endpoint=github-heatmap"
     },
     {
       "source": "/api/github-streak",
       "destination": "/api/index.py?endpoint=github-streak"
+    },
+    {
+      "source": "/api/highlights",
+      "destination": "/api/index.py?endpoint=highlights"
     },
     {
       "source": "/card.svg",
