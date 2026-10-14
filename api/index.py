@@ -821,6 +821,168 @@ def render_highlights_svg(gh: dict, lc: dict, static: bool = False) -> str:
     return "\n".join(parts)
 
 
+def render_info_card_svg(gh_data: dict, static: bool = False) -> str:
+    total = gh_data.get("total", 8009)
+    current_streak = gh_data.get("current_streak", gh_data.get("longest_streak", 196))
+    activity = f"{total:,} commits · {current_streak}d streak"
+
+    left_col = [
+        ("Name", "Soumya Chakraborty"),
+        ("Education", "B.Tech CSE · 3rd Year"),
+        ("Seeking", "Systems & DevTools roles"),
+        ("Focus", "AI agent runtimes & engines"),
+        ("Winner", "FusioniX'26 Joint Winner"),
+        ("Hackathons", "10+ shipped in 2026"),
+        ("Web", "soumya.pro · x.com/soumyachk1"),
+    ]
+
+    right_col = [
+        ("OS", "macOS · Linux · Windows"),
+        ("Languages", "Rust · TypeScript · Swift · Python"),
+        ("Engines", "Hydra · GPUI · Tauri v2 · CRDT"),
+        ("Storage", "SQLite · Local-First"),
+        ("Workflow", "Parallel Git Worktrees"),
+        ("Activity", activity),
+        ("Telemetry", "Kolkata, IN · UTC+5:30"),
+    ]
+
+    W = 860
+    TITLE = "soumyachk101@github: ~/whoami"
+    FS = 12.5
+    LH = 23.0
+    BAR_H = 32.0
+    STAGGER = 0.12
+    FADE = 0.40
+
+    rows = max(len(left_col), len(right_col)) + 2
+    height = round(BAR_H + 16 + rows * LH + 32)
+
+    def anim(i: int) -> str:
+        if static:
+            return ""
+        begin = 0.15 + i * STAGGER
+        return (
+            f'<animate attributeName="opacity" from="0" to="1" '
+            f'begin="{begin:.2f}s" dur="{FADE}s" fill="freeze"/>'
+            f'<animateTransform attributeName="transform" type="translate" '
+            f'from="-8 0" to="0 0" begin="{begin:.2f}s" dur="{FADE}s" fill="freeze"/>'
+        )
+
+    op = "1" if static else "0"
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" '
+        f'height="{height}" viewBox="0 0 {W} {height}">',
+        "<defs>",
+        '  <linearGradient id="barGrad" x1="0%" y1="0%" x2="100%" y2="0%">',
+        '    <stop offset="0%" stop-color="#161b22"/>',
+        '    <stop offset="100%" stop-color="#0d1117"/>',
+        "  </linearGradient>",
+        "</defs>",
+        f'<rect width="100%" height="100%" rx="8" fill="{BG}" stroke="{BORDER}" stroke-width="1"/>',
+        f'<path d="M1 9 a8 8 0 0 1 8-8 h{W - 18} a8 8 0 0 1 8 8 v{BAR_H - 9} h-{W - 2} z" fill="url(#barGrad)"/>',
+        f'<line x1="1" y1="{BAR_H}" x2="{W - 1}" y2="{BAR_H}" stroke="{BORDER}" stroke-width="1"/>',
+        f'<circle cx="20" cy="{BAR_H / 2}" r="5" fill="#f85149"/>',
+        f'<circle cx="38" cy="{BAR_H / 2}" r="5" fill="#d29922"/>',
+        f'<circle cx="56" cy="{BAR_H / 2}" r="5" fill="{ACCENT}"/>',
+        f'<text x="{W / 2}" y="{BAR_H / 2 + 4.5}" fill="{DIM}" font-family="{FONT}" font-size="12" text-anchor="middle">{escape(TITLE)}</text>',
+        f'<g font-family="{FONT}" font-size="{FS}" xml:space="preserve">',
+    ]
+
+    div_top = BAR_H + 16
+    div_bot = height - 36
+    parts.append(
+        f'<line x1="425" y1="{div_top}" x2="425" y2="{div_bot}" stroke="#21262d" stroke-dasharray="3 3"/>'
+    )
+
+    y_start = BAR_H + 16 + LH * 0.75
+    y = y_start
+    step = 0
+    parts.append(
+        f'<g opacity="{op}">'
+        f'<text x="36.0" y="{y:.1f}" fill="{ACCENT}" font-weight="bold">soumyachk101@github</text>'
+        f"{anim(step)}</g>"
+    )
+    y += LH
+    step += 1
+    parts.append(
+        f'<g opacity="{op}">'
+        f'<text x="36.0" y="{y:.1f}" fill="{DIM}">-------------------</text>'
+        f"{anim(step)}</g>"
+    )
+    y += LH
+    step += 1
+
+    for k, v in left_col:
+        pad = " " * (12 - len(k))
+        parts.append(
+            f'<g opacity="{op}">'
+            f'<text x="36.0" y="{y:.1f}">'
+            f'<tspan fill="{ACCENT}" font-weight="bold">{escape(k)}</tspan>'
+            f'<tspan fill="{DIM}">:</tspan>{pad}'
+            f'<tspan fill="{INK}">{escape(v)}</tspan></text>'
+            f"{anim(step)}</g>"
+        )
+        y += LH
+        step += 1
+
+    y = y_start
+    parts.append(
+        f'<g opacity="{op}">'
+        f'<text x="445.0" y="{y:.1f}" fill="{ACCENT}" font-weight="bold">runtime &amp; sys specs</text>'
+        f"{anim(step)}</g>"
+    )
+    y += LH
+    step += 1
+    parts.append(
+        f'<g opacity="{op}">'
+        f'<text x="445.0" y="{y:.1f}" fill="{DIM}">---------------------</text>'
+        f"{anim(step)}</g>"
+    )
+    y += LH
+    step += 1
+
+    for k, v in right_col:
+        pad = " " * (12 - len(k))
+        parts.append(
+            f'<g opacity="{op}">'
+            f'<text x="445.0" y="{y:.1f}">'
+            f'<tspan fill="{ACCENT}" font-weight="bold">{escape(k)}</tspan>'
+            f'<tspan fill="{DIM}">:</tspan>{pad}'
+            f'<tspan fill="{INK}">{escape(v)}</tspan></text>'
+            f"{anim(step)}</g>"
+        )
+        y += LH
+        step += 1
+
+    swatch_y = height - 24
+    colors = [
+        "#161b22",
+        "#0e4429",
+        "#006d32",
+        "#26a641",
+        "#39d353",
+        "#58a6ff",
+        "#bc8cff",
+        "#c9d1d9",
+    ]
+    swatches_left = [(col, 36 + i * 40) for i, col in enumerate(colors)]
+    swatches_right = [(col, 445 + i * 40) for i, col in enumerate(colors)]
+
+    left_tags = "".join(
+        f'<rect x="{x}" y="{swatch_y}" width="32" height="12" rx="3" fill="{col}"/>'
+        for col, x in swatches_left
+    )
+    right_tags = "".join(
+        f'<rect x="{x}" y="{swatch_y}" width="32" height="12" rx="3" fill="{col}"/>'
+        for col, x in swatches_right
+    )
+    parts.append(
+        f'<g opacity="{op}">{left_tags}{right_tags}{anim(step)}</g>'
+    )
+    parts.append("</g></svg>")
+    return "\n".join(parts)
+
+
 def landing_page(host: str, username: str) -> str:
     proto = "https"
     base = f"{proto}://{host}"
@@ -929,6 +1091,14 @@ def app(environ, start_response):
             gh_data = fetch_github_contributions(gh_user)
             lc_data = fetch_leetcode(user)
             svg = render_highlights_svg(gh_data, lc_data, static=static)
+            return send_svg(svg, start_response)
+        except Exception as e:
+            return send_error(str(e), start_response)
+
+    elif "info-card" in path or endpoint == "info-card":
+        try:
+            gh_data = fetch_github_contributions(gh_user)
+            svg = render_info_card_svg(gh_data, static=static)
             return send_svg(svg, start_response)
         except Exception as e:
             return send_error(str(e), start_response)

@@ -10,6 +10,14 @@
       "destination": "/api/index.py?endpoint=github-streak"
     },
     {
+      "source": "/info-card.svg",
+      "destination": "/api/index.py?endpoint=info-card"
+    },
+    {
+      "source": "/api/info-card",
+      "destination": "/api/index.py?endpoint=info-card"
+    },
+    {
       "source": "/highlights.svg",
       "destination": "/api/index.py?endpoint=highlights"
     },
