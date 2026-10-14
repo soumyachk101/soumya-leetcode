@@ -1,20 +1,25 @@
-"""Vercel Serverless Function: Real-Time Animated LeetCode Stats SVGs (WSGI).
+"""Vercel Serverless Function: Real-Time Animated Stats SVGs (LeetCode + GitHub).
 
 Endpoints:
-- /card.svg   : Donut progress chart, difficulty bars, ranking & streak
-- /badges.svg : Earned badges with icons & issue dates
-- /streak.svg : 3-column stats card with animated green streak ring
-- /           : Interactive dark-mode preview & documentation
+- /card.svg           : LeetCode donut progress chart, difficulty bars, ranking & streak
+- /badges.svg         : LeetCode earned badges with icons & issue dates
+- /streak.svg         : LeetCode 3-column stats card with animated green streak ring
+- /github-heatmap.svg : Real-Time GitHub 53-week contribution calendar heatmap
+- /github-streak.svg  : Real-Time GitHub contributions streak card
+- /                   : Interactive dark-mode preview & documentation
 """
 
 import base64
+from datetime import date, timedelta
 from html import escape
 import io
 import json
 import math
+import re
 import time
 from urllib.parse import parse_qs
 
+from bs4 import BeautifulSoup
 from PIL import Image
 import requests
 
@@ -355,6 +360,290 @@ def render_streak_svg(d: dict, static: bool = False) -> str:
     return "\n".join(parts)
 
 
+GH_PALETTE = ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353", "#69f0a0"]
+GH_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+GH_CELL = 13.0
+GH_GAP = 3.0
+GH_STEP = GH_CELL + GH_GAP
+GH_PAD = 16.0
+GH_LABEL_H = 20.0
+GH_FOOTER_H = 34.0
+GH_DELAY = 0.015
+GH_DUR = 0.4
+GH_DATA_CACHE = {}  # username -> (timestamp, data)
+
+
+def parse_gh_count(text: str) -> int:
+    m = re.match(r"(\d+|No)\s+contribution", text.strip())
+    if not m:
+        return 0
+    return 0 if m.group(1) == "No" else int(m.group(1))
+
+
+def fetch_github_contributions(username: str = "soumyachk101") -> dict:
+    now = time.time()
+    if username in GH_DATA_CACHE:
+        ts, cached = GH_DATA_CACHE[username]
+        if now - ts < CACHE_TTL:
+            return cached
+
+    url = f"https://github.com/users/{username}/contributions"
+    try:
+        resp = requests.get(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+                "Accept": "text/html,application/xhtml+xml",
+            },
+            timeout=15,
+        )
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+        cells = soup.select("td.ContributionCalendar-day[data-date]")
+        if not cells:
+            if username in GH_DATA_CACHE:
+                return GH_DATA_CACHE[username][1]
+            raise ValueError(f"No contribution cells found for {username}")
+
+        tips = {t.get("for"): parse_gh_count(t.get_text()) for t in soup.select("tool-tip")}
+
+        days = sorted(
+            [
+                {
+                    "date": td["data-date"],
+                    "level": int(td.get("data-level", 0)),
+                    "count": tips.get(td.get("id"), 0),
+                }
+                for td in cells
+            ],
+            key=lambda d: d["date"],
+        )
+
+        total = sum(d["count"] for d in days)
+        best = max(days, key=lambda d: d["count"]) if days else {"date": "", "count": 0}
+
+        longest = run = 0
+        prev = None
+        for d in days:
+            day = date.fromisoformat(d["date"])
+            if d["count"] > 0:
+                run = run + 1 if prev and day - prev == timedelta(days=1) else 1
+                longest = max(longest, run)
+                prev = day
+            else:
+                run = 0
+
+        current = 0
+        for i, d in enumerate(reversed(days)):
+            if d["count"] > 0:
+                current += 1
+            elif i == 0:
+                continue
+            else:
+                break
+
+        data = {
+            "username": username,
+            "fetched": days[-1]["date"] if days else "",
+            "total": total,
+            "best_day": best,
+            "longest_streak": longest,
+            "current_streak": current,
+            "days": days,
+        }
+        GH_DATA_CACHE[username] = (now, data)
+        return data
+    except Exception as e:
+        if username in GH_DATA_CACHE:
+            return GH_DATA_CACHE[username][1]
+        raise
+
+
+def render_github_heatmap_svg(data: dict, static: bool = False) -> str:
+    days = data.get("days", [])
+    if not days:
+        return f'<svg xmlns="http://www.w3.org/2000/svg" width="860" height="170"><text x="20" y="50" fill="{DIM}">No GitHub data</text></svg>'
+
+    best_date = data["best_day"]["date"]
+
+    def dow(iso: str) -> int:
+        return (date.fromisoformat(iso).weekday() + 1) % 7  # Sun=0
+
+    weeks: list[list[dict]] = [[]]
+    for d in days:
+        if dow(d["date"]) == 0 and weeks[-1]:
+            weeks.append([])
+        weeks[-1].append(d)
+
+    n_weeks = len(weeks)
+    grid_w = n_weeks * GH_STEP - GH_GAP
+    grid_h = 7 * GH_STEP - GH_GAP
+    width = round(grid_w + 2 * GH_PAD)
+    height = round(GH_LABEL_H + grid_h + GH_FOOTER_H + 2 * GH_PAD - 6)
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" '
+        f'height="{height}" viewBox="0 0 {width} {height}">',
+        f'<rect width="100%" height="100%" rx="8" fill="{BG}" '
+        f'stroke="{BORDER}" stroke-width="1"/>',
+    ]
+
+    if not static:
+        parts.append(
+            "<style>"
+            ".c{opacity:0;animation:pop " + f"{GH_DUR}s" + " ease-out forwards}"
+            "@keyframes pop{from{opacity:0;transform:translateY(-6px)}"
+            "to{opacity:1;transform:none}}"
+            "</style>"
+        )
+
+    # Month labels
+    parts.append(
+        f'<g font-family="{FONT}" font-size="10" fill="{DIM}">'
+    )
+    last_label_col = -4
+    prev_month = None
+    for w, col in enumerate(weeks):
+        m = date.fromisoformat(col[0]["date"]).month
+        if m != prev_month and w - last_label_col >= 3 and w < n_weeks - 2:
+            x = GH_PAD + w * GH_STEP
+            parts.append(
+                f'<text x="{x:.0f}" y="{GH_PAD + 9:.0f}">{GH_MONTHS[m - 1]}</text>'
+            )
+            last_label_col = w
+        prev_month = m
+    parts.append("</g>")
+
+    # Day cells
+    top = GH_PAD + GH_LABEL_H
+    parts.append("<g>")
+    for w, col in enumerate(weeks):
+        for d in col:
+            r = dow(d["date"])
+            x = GH_PAD + w * GH_STEP
+            y = top + r * GH_STEP
+            color = (GH_PALETTE[5] if d["date"] == best_date
+                     else GH_PALETTE[min(d["level"], 4)])
+            attrs = ""
+            if not static:
+                attrs = (f' class="c" '
+                         f'style="animation-delay:{(w + r) * GH_DELAY:.3f}s"')
+            parts.append(
+                f'<rect x="{x:.0f}" y="{y:.0f}" width="{GH_CELL:.0f}" '
+                f'height="{GH_CELL:.0f}" rx="3" fill="{color}"{attrs}>'
+                f'<title>{d["count"]} on {d["date"]}</title></rect>'
+            )
+    parts.append("</g>")
+
+    # Footer
+    fy = top + grid_h + 21
+    stats = f'{data["total"]:,} contributions in the last year &#183; {data["current_streak"]} day current streak'
+    parts.append(
+        f'<text x="{GH_PAD:.0f}" y="{fy:.0f}" font-family="{FONT}" '
+        f'font-size="11" fill="{DIM}">{stats}</text>'
+    )
+    legend = [f'<g font-family="{FONT}" font-size="11" fill="{DIM}">']
+    lx = width - GH_PAD - 5 * (GH_CELL + 3) - 66
+    legend.append(f'<text x="{lx:.0f}" y="{fy:.0f}">less</text>')
+    for i in range(5):
+        legend.append(
+            f'<rect x="{lx + 30 + i * (GH_CELL + 3):.0f}" y="{fy - 10:.0f}" '
+            f'width="{GH_CELL:.0f}" height="{GH_CELL:.0f}" rx="3" '
+            f'fill="{GH_PALETTE[i]}"/>'
+        )
+    legend.append(
+        f'<text x="{lx + 30 + 5 * (GH_CELL + 3) + 4:.0f}" y="{fy:.0f}">more</text>'
+    )
+    legend.append("</g>")
+    parts.extend(legend)
+
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+
+def render_github_streak_svg(gh: dict, static: bool = False) -> str:
+    left = (f"{gh['total']:,}", "total contributions", "last 12 months")
+    center = (str(gh["current_streak"]), "day current streak", "daily active shipping")
+    right = (str(gh["longest_streak"]), "day longest streak", f"best day {gh['best_day']['count']} commits")
+
+    W = 860
+    H = 170
+    R = 46.0  # ring radius
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" '
+        f'viewBox="0 0 {W} {H}">',
+        f'<rect width="100%" height="100%" rx="8" fill="{BG}" '
+        f'stroke="{BORDER}" stroke-width="1"/>',
+    ]
+    if not static:
+        parts.append(
+            "<style>.f{opacity:0;animation:fi .6s ease-out forwards}"
+            "@keyframes fi{to{opacity:1}}</style>"
+        )
+
+    def fade(delay: float) -> str:
+        return "" if static else (
+            f' class="f" style="animation-delay:{delay:.2f}s"'
+        )
+
+    parts.append(f'<g font-family="{FONT}">')
+
+    # Side columns
+    for cx, (value, label, sub), delay in (
+        (150.0, left, 0.15),
+        (W - 150.0, right, 0.35),
+    ):
+        parts.append(
+            f'<g text-anchor="middle"{fade(delay)}>'
+            f'<text x="{cx}" y="76" font-size="30" font-weight="bold" '
+            f'fill="{INK}">{value}</text>'
+            f'<text x="{cx}" y="100" font-size="12" fill="{DIM}">{label}</text>'
+            f'<text x="{cx}" y="120" font-size="11" fill="{DIM}">{sub}</text>'
+            f"</g>"
+        )
+
+    # Faint separators
+    for x in (300, W - 300):
+        parts.append(
+            f'<line x1="{x}" y1="30" x2="{x}" y2="{H - 30}" '
+            f'stroke="{BORDER}" stroke-width="1"/>'
+        )
+
+    # Center ring + stat
+    cx, cy = W / 2, H / 2 - 8
+    circumference = 2 * math.pi * R
+    ring = (
+        f'<circle cx="{cx}" cy="{cy}" r="{R}" fill="none" '
+        f'stroke="{ACCENT}" stroke-width="3" stroke-linecap="round" '
+        f'transform="rotate(-90 {cx} {cy})"'
+    )
+    if static:
+        parts.append(ring + "/>")
+    else:
+        parts.append(
+            ring + f' stroke-dasharray="{circumference:.1f}" '
+            f'stroke-dashoffset="{circumference:.1f}">'
+            f'<animate attributeName="stroke-dashoffset" '
+            f'from="{circumference:.1f}" to="0" begin="0.2s" dur="1.1s" '
+            f'fill="freeze"/></circle>'
+        )
+    value, label, sub = center
+    parts.append(
+        f'<g text-anchor="middle"{fade(0.5)}>'
+        f'<text x="{cx}" y="{cy + 10}" font-size="34" font-weight="bold" '
+        f'fill="{ACCENT}">{value}</text>'
+        f'<text x="{cx}" y="{cy + R + 24}" font-size="12" '
+        f'fill="{DIM}">{label}</text>'
+        f'<text x="{cx}" y="{cy + R + 42}" font-size="11" '
+        f'fill="{DIM}">{sub}</text>'
+        f"</g>"
+    )
+
+    parts.append("</g></svg>")
+    return "\n".join(parts)
+
+
 def landing_page(host: str, username: str) -> str:
     proto = "https"
     base = f"{proto}://{host}"
@@ -363,7 +652,7 @@ def landing_page(host: str, username: str) -> str:
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Soumya Chakraborty · Real-Time LeetCode Stats API</title>
+<title>Soumya Chakraborty · Real-Time Stats API</title>
 <style>
   body {{
     background: #0d1117;
@@ -398,20 +687,28 @@ def landing_page(host: str, username: str) -> str:
 </style>
 </head>
 <body>
-  <h1>⚡ Soumya's Real-Time LeetCode Stats API <span class="badge">LIVE</span></h1>
-  <p>Self-hosted, real-time animated SVG stats engine deployed on Vercel. Updates in real-time on LeetCode submissions with 2-minute Edge caching.</p>
+  <h1>⚡ Soumya's Real-Time Stats API <span class="badge">LIVE</span></h1>
+  <p>Self-hosted, real-time animated SVG stats engine deployed on Vercel. Updates in real-time with 2-minute Edge caching.</p>
 
-  <h3>1. Main Progress Card</h3>
+  <h3>1. LeetCode Progress Card</h3>
   <pre>&lt;img src="{base}/card.svg" width="860" /&gt;</pre>
   <div class="card-wrap"><img src="/card.svg?user={username}" /></div>
 
-  <h3>2. Badges Card</h3>
+  <h3>2. LeetCode Badges Card</h3>
   <pre>&lt;img src="{base}/badges.svg" width="860" /&gt;</pre>
   <div class="card-wrap"><img src="/badges.svg?user={username}" /></div>
 
-  <h3>3. Streak &amp; Volume Card</h3>
+  <h3>3. LeetCode Streak &amp; Volume Card</h3>
   <pre>&lt;img src="{base}/streak.svg" width="860" /&gt;</pre>
   <div class="card-wrap"><img src="/streak.svg?user={username}" /></div>
+
+  <h3>4. GitHub Contribution Heatmap (Real-Time)</h3>
+  <pre>&lt;img src="{base}/github-heatmap.svg" width="860" /&gt;</pre>
+  <div class="card-wrap"><img src="/github-heatmap.svg?user=soumyachk101" /></div>
+
+  <h3>5. GitHub Streak &amp; Volume Card (Real-Time)</h3>
+  <pre>&lt;img src="{base}/github-streak.svg" width="860" /&gt;</pre>
+  <div class="card-wrap"><img src="/github-streak.svg?user=soumyachk101" /></div>
 </body>
 </html>"""
 
@@ -423,10 +720,30 @@ def app(environ, start_response):
     qs = parse_qs(query_str)
 
     user = qs.get("user", qs.get("username", ["soumya-chk101"]))[0]
+    gh_user = qs.get("gh_user", qs.get("github_user", qs.get("user", ["soumyachk101"])))[0]
+    if gh_user == "soumya-chk101":
+        gh_user = "soumyachk101"
     static = qs.get("static", ["0"])[0] == "1"
     endpoint = qs.get("endpoint", [""])[0]
 
-    if "card" in path or endpoint == "card":
+    # Check GitHub endpoints first to avoid 'streak' matching 'github-streak'
+    if "github-heatmap" in path or endpoint == "github-heatmap":
+        try:
+            data = fetch_github_contributions(gh_user)
+            svg = render_github_heatmap_svg(data, static=static)
+            return send_svg(svg, start_response)
+        except Exception as e:
+            return send_error(str(e), start_response)
+
+    elif "github-streak" in path or endpoint == "github-streak":
+        try:
+            data = fetch_github_contributions(gh_user)
+            svg = render_github_streak_svg(data, static=static)
+            return send_svg(svg, start_response)
+        except Exception as e:
+            return send_error(str(e), start_response)
+
+    elif "card" in path or endpoint == "card":
         try:
             data = fetch_leetcode(user)
             svg = render_card_svg(data, static=static)
@@ -470,7 +787,7 @@ def send_svg(svg_str: str, start_response):
         ("Content-Type", "image/svg+xml; charset=utf-8"),
         ("Content-Length", str(len(body))),
         ("Access-Control-Allow-Origin", "*"),
-        ("Cache-Control", "public, max-age=60, s-maxage=180, stale-while-revalidate=600"),
+        ("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300"),
     ]
     start_response(status, headers)
     return [body]
@@ -489,3 +806,4 @@ def send_error(msg: str, start_response):
 
 # Also export handler for environments looking for handler
 handler = app
+

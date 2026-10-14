@@ -2,6 +2,22 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/github-heatmap.svg",
+      "destination": "/api/index.py?endpoint=github-heatmap"
+    },
+    {
+      "source": "/github-streak.svg",
+      "destination": "/api/index.py?endpoint=github-streak"
+    },
+    {
+      "source": "/api/github-heatmap",
+      "destination": "/api/index.py?endpoint=github-heatmap"
+    },
+    {
+      "source": "/api/github-streak",
+      "destination": "/api/index.py?endpoint=github-streak"
+    },
+    {
       "source": "/card.svg",
       "destination": "/api/index.py?endpoint=card"
     },
