@@ -32,7 +32,8 @@ INK = "#c9d1d9"
 DIM = "#8b949e"
 ACCENT = "#3fb950"
 LC = {"Easy": "#00b8a3", "Medium": "#ffc01e", "Hard": "#ef4743"}
-FONT = "ui-monospace, SFMono-Regular, 'Cascadia Mono', Menlo, Consolas, monospace"
+FONT = "ui-monospace, SFMono-Regular, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Cascadia Mono', 'Segoe UI Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Roboto Mono', monospace"
+CRISP_CSS = "text{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:geometricPrecision;}image{image-rendering:-webkit-optimize-contrast;image-rendering:high-quality;}"
 
 LEETCODE_GRAPHQL = "https://leetcode.com/graphql"
 QUERY = """
@@ -116,7 +117,7 @@ def fetch_icon_b64(url: str) -> str:
         resp = requests.get(url, timeout=15, headers={"User-Agent": "soumya-leetcode-api/1.0"})
         resp.raise_for_status()
         img = Image.open(io.BytesIO(resp.content)).convert("RGBA")
-        img.thumbnail((128, 128), Image.LANCZOS)
+        img.thumbnail((256, 256), Image.LANCZOS)
         buf = io.BytesIO()
         img.save(buf, "PNG", optimize=True)
         b64 = base64.b64encode(buf.getvalue()).decode()
@@ -140,18 +141,20 @@ def render_card_svg(d: dict, static: bool = False) -> str:
     active_days = cal.get("active_days", 0)
 
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">',
-        f'<rect width="100%" height="100%" rx="8" fill="{BG}" stroke="{BORDER}" stroke-width="1"/>',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" text-rendering="geometricPrecision" shape-rendering="geometricPrecision">',
+        f'<rect width="100%" height="100%" rx="8" fill="{BG}" stroke="{BORDER}" stroke-width="1.2"/>',
     ]
     if not static:
         parts.append(
-            "<style>"
+            f"<style>{CRISP_CSS}"
             ".f{opacity:0;animation:fi .5s ease-out forwards}"
             ".b{transform:scaleX(0);transform-origin:left;animation:gr .9s ease-out forwards}"
             "@keyframes fi{to{opacity:1}}"
             "@keyframes gr{to{transform:scaleX(1)}}"
             "</style>"
         )
+    else:
+        parts.append(f"<style>{CRISP_CSS}</style>")
 
     def cls(name: str, delay: float) -> str:
         return "" if static else f' class="{name}" style="animation-delay:{delay:.2f}s"'
@@ -186,8 +189,8 @@ def render_card_svg(d: dict, static: bool = False) -> str:
 
     parts.append(
         f'<g text-anchor="middle"{cls("f", 0.4)}>'
-        f'<text x="{cx}" y="{cy + 2}" font-size="30" font-weight="bold" fill="{INK}">{total_solved}</text>'
-        f'<text x="{cx}" y="{cy + 24}" font-size="11" fill="{DIM}">solved</text>'
+        f'<text x="{cx}" y="{cy + 2}" font-size="32" font-weight="bold" fill="{INK}">{total_solved}</text>'
+        f'<text x="{cx}" y="{cy + 24}" font-size="12" font-weight="600" fill="{DIM}">solved</text>'
         f"</g>"
     )
 
@@ -202,8 +205,8 @@ def render_card_svg(d: dict, static: bool = False) -> str:
         parts.append(
             f'<g{cls("f", 0.3 + i * 0.15)}>'
             f'<circle cx="{bx + 5}" cy="{y - 4}" r="5" fill="{LC[name]}"/>'
-            f'<text x="{bx + 18}" y="{y}" font-size="12" fill="{DIM}">{name}</text>'
-            f'<text x="{count_x}" y="{y}" font-size="12" fill="{INK}" text-anchor="end">{s_count} / {t_count}</text>'
+            f'<text x="{bx + 18}" y="{y}" font-size="13" font-weight="600" fill="{DIM}">{name}</text>'
+            f'<text x="{count_x}" y="{y}" font-size="13" font-weight="600" fill="{INK}" text-anchor="end">{s_count} / {t_count}</text>'
             f"</g>"
         )
         parts.append(
@@ -219,19 +222,19 @@ def render_card_svg(d: dict, static: bool = False) -> str:
     )
     parts.append(
         f'<g{cls("f", 0.55)}>'
-        f'<text x="{rx}" y="72" font-size="32" font-weight="bold" fill="{ACCENT}">{streak}</text>'
-        f'<text x="{rx}" y="94" font-size="12" fill="{DIM}">day max streak</text>'
+        f'<text x="{rx}" y="72" font-size="34" font-weight="bold" fill="{ACCENT}">{streak}</text>'
+        f'<text x="{rx}" y="94" font-size="13" font-weight="600" fill="{DIM}">day max streak</text>'
     )
     badge_label = "100 Days Badge"
-    bw = 9 * len(badge_label) + 24
+    bw = 9.5 * len(badge_label) + 24
     parts.append(
         f'<rect x="{rx}" y="112" width="{bw}" height="26" rx="13" fill="none" stroke="{ACCENT}" stroke-width="1.2"/>'
-        f'<text x="{rx + bw / 2}" y="{129}" font-size="12" font-weight="bold" fill="{ACCENT}" text-anchor="middle">{badge_label}</text>'
-        f'<text x="{rx}" y="{166}" font-size="11" fill="{DIM}">rank #{ranking:,} &#183; {active_days} active days</text>'
+        f'<text x="{rx + bw / 2}" y="{129}" font-size="13" font-weight="bold" fill="{ACCENT}" text-anchor="middle">{badge_label}</text>'
+        f'<text x="{rx}" y="{166}" font-size="12" font-weight="500" fill="{DIM}">rank #{ranking:,} &#183; {active_days} active days</text>'
         f"</g>"
     )
     parts.append(
-        f'<text x="{w - 20}" y="{h - 14}" font-size="10" fill="{DIM}" text-anchor="end">leetcode.com/u/{d["username"]}</text>'
+        f'<text x="{w - 20}" y="{h - 14}" font-size="11" fill="{DIM}" text-anchor="end">leetcode.com/u/{d["username"]}</text>'
     )
     parts.append("</g></svg>")
     return "\n".join(parts)
@@ -257,13 +260,15 @@ def render_badges_svg(d: dict, static: bool = False) -> str:
 
     slot = (w - 40) / max(len(badges), 1)
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">',
-        f'<rect width="100%" height="100%" rx="8" fill="{BG}" stroke="{BORDER}" stroke-width="1"/>',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" text-rendering="geometricPrecision" shape-rendering="geometricPrecision">',
+        f'<rect width="100%" height="100%" rx="8" fill="{BG}" stroke="{BORDER}" stroke-width="1.2"/>',
     ]
     if not static:
         parts.append(
-            "<style>.f{opacity:0;animation:fi .5s ease-out forwards}@keyframes fi{to{opacity:1}}</style>"
+            f"<style>{CRISP_CSS}.f{{opacity:0;animation:fi .5s ease-out forwards}}@keyframes fi{{to{{opacity:1}}}}</style>"
         )
+    else:
+        parts.append(f"<style>{CRISP_CSS}</style>")
 
     parts.append(f'<g font-family="{FONT}" text-anchor="middle">')
     for i, b in enumerate(badges):
@@ -277,16 +282,17 @@ def render_badges_svg(d: dict, static: bool = False) -> str:
         if b64:
             parts.append(
                 f'<image x="{cx - icon_sz / 2:.0f}" y="24" width="{icon_sz}" height="{icon_sz}" '
+                f'style="image-rendering:-webkit-optimize-contrast;image-rendering:high-quality;" '
                 f'href="data:image/png;base64,{b64}"/>'
             )
         parts.append(
-            f'<text x="{cx:.0f}" y="116" font-size="11" fill="{INK}">{escape(short_name)}</text>'
-            f'<text x="{cx:.0f}" y="134" font-size="9.5" fill="{DIM}">{escape(b.get("creationDate", ""))}</text>'
+            f'<text x="{cx:.0f}" y="116" font-size="13" font-weight="600" fill="{INK}">{escape(short_name)}</text>'
+            f'<text x="{cx:.0f}" y="134" font-size="11.5" font-weight="500" fill="{DIM}">{escape(b.get("creationDate", ""))}</text>'
             f"</g>"
         )
 
     parts.append(
-        f'<text x="{w - 20}" y="{h - 14}" font-size="10" fill="{DIM}" text-anchor="end">leetcode.com/u/{d["username"]}</text>'
+        f'<text x="{w - 20}" y="{h - 14}" font-size="11" fill="{DIM}" text-anchor="end">leetcode.com/u/{d["username"]}</text>'
     )
     parts.append("</g></svg>")
     return "\n".join(parts)
@@ -307,13 +313,15 @@ def render_streak_svg(d: dict, static: bool = False) -> str:
     right = (str(solved_all), "problems solved", f"{hard} hard &#183; {med} med")
 
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">',
-        f'<rect width="100%" height="100%" rx="8" fill="{BG}" stroke="{BORDER}" stroke-width="1"/>',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" text-rendering="geometricPrecision" shape-rendering="geometricPrecision">',
+        f'<rect width="100%" height="100%" rx="8" fill="{BG}" stroke="{BORDER}" stroke-width="1.2"/>',
     ]
     if not static:
         parts.append(
-            "<style>.f{opacity:0;animation:fi .6s ease-out forwards}@keyframes fi{to{opacity:1}}</style>"
+            f"<style>{CRISP_CSS}.f{{opacity:0;animation:fi .6s ease-out forwards}}@keyframes fi{{to{{opacity:1}}}}</style>"
         )
+    else:
+        parts.append(f"<style>{CRISP_CSS}</style>")
 
     def fade(delay: float) -> str:
         return "" if static else f' class="f" style="animation-delay:{delay:.2f}s"'
@@ -326,9 +334,9 @@ def render_streak_svg(d: dict, static: bool = False) -> str:
     ):
         parts.append(
             f'<g text-anchor="middle"{fade(delay)}>'
-            f'<text x="{cx}" y="76" font-size="30" font-weight="bold" fill="{INK}">{val}</text>'
-            f'<text x="{cx}" y="100" font-size="12" fill="{DIM}">{lbl}</text>'
-            f'<text x="{cx}" y="120" font-size="11" fill="{DIM}">{sub}</text>'
+            f'<text x="{cx}" y="76" font-size="32" font-weight="bold" fill="{INK}">{val}</text>'
+            f'<text x="{cx}" y="100" font-size="13" font-weight="600" fill="{DIM}">{lbl}</text>'
+            f'<text x="{cx}" y="120" font-size="12" font-weight="500" fill="{DIM}">{sub}</text>'
             f"</g>"
         )
 
@@ -353,9 +361,9 @@ def render_streak_svg(d: dict, static: bool = False) -> str:
     v, l, s = center
     parts.append(
         f'<g text-anchor="middle"{fade(0.5)}>'
-        f'<text x="{cx}" y="{cy + 10}" font-size="34" font-weight="bold" fill="{ACCENT}">{v}</text>'
-        f'<text x="{cx}" y="{cy + r + 24}" font-size="12" fill="{DIM}">{l}</text>'
-        f'<text x="{cx}" y="{cy + r + 42}" font-size="11" fill="{DIM}">{s}</text>'
+        f'<text x="{cx}" y="{cy + 10}" font-size="36" font-weight="bold" fill="{ACCENT}">{v}</text>'
+        f'<text x="{cx}" y="{cy + r + 24}" font-size="13" font-weight="600" fill="{DIM}">{l}</text>'
+        f'<text x="{cx}" y="{cy + r + 42}" font-size="12" font-weight="500" fill="{DIM}">{s}</text>'
         f"</g>"
     )
     parts.append("</g></svg>")
@@ -596,23 +604,25 @@ def render_github_heatmap_svg(data: dict, static: bool = False) -> str:
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" '
-        f'height="{height}" viewBox="0 0 {width} {height}">',
+        f'height="{height}" viewBox="0 0 {width} {height}" text-rendering="geometricPrecision" shape-rendering="geometricPrecision">',
         f'<rect width="100%" height="100%" rx="8" fill="{BG}" '
-        f'stroke="{BORDER}" stroke-width="1"/>',
+        f'stroke="{BORDER}" stroke-width="1.2"/>',
     ]
 
     if not static:
         parts.append(
-            "<style>"
+            f"<style>{CRISP_CSS}"
             ".c{opacity:0;animation:pop " + f"{GH_DUR}s" + " ease-out forwards}"
             "@keyframes pop{from{opacity:0;transform:translateY(-6px)}"
             "to{opacity:1;transform:none}}"
             "</style>"
         )
+    else:
+        parts.append(f"<style>{CRISP_CSS}</style>")
 
     # Month labels
     parts.append(
-        f'<g font-family="{FONT}" font-size="10" fill="{DIM}">'
+        f'<g font-family="{FONT}" font-size="11" font-weight="500" fill="{DIM}">'
     )
     last_label_col = -4
     prev_month = None
@@ -653,9 +663,9 @@ def render_github_heatmap_svg(data: dict, static: bool = False) -> str:
     stats = f'{data["total"]:,} contributions in the last year &#183; {data["current_streak"]} day current streak'
     parts.append(
         f'<text x="{GH_PAD:.0f}" y="{fy:.0f}" font-family="{FONT}" '
-        f'font-size="11" fill="{DIM}">{stats}</text>'
+        f'font-size="12" font-weight="500" fill="{DIM}">{stats}</text>'
     )
-    legend = [f'<g font-family="{FONT}" font-size="11" fill="{DIM}">']
+    legend = [f'<g font-family="{FONT}" font-size="12" font-weight="500" fill="{DIM}">']
     lx = width - GH_PAD - 5 * (GH_CELL + 3) - 66
     legend.append(f'<text x="{lx:.0f}" y="{fy:.0f}">less</text>')
     for i in range(5):
@@ -685,15 +695,17 @@ def render_github_streak_svg(gh: dict, static: bool = False) -> str:
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" '
-        f'viewBox="0 0 {W} {H}">',
+        f'viewBox="0 0 {W} {H}" text-rendering="geometricPrecision" shape-rendering="geometricPrecision">',
         f'<rect width="100%" height="100%" rx="8" fill="{BG}" '
-        f'stroke="{BORDER}" stroke-width="1"/>',
+        f'stroke="{BORDER}" stroke-width="1.2"/>',
     ]
     if not static:
         parts.append(
-            "<style>.f{opacity:0;animation:fi .6s ease-out forwards}"
+            f"<style>{CRISP_CSS}.f{{opacity:0;animation:fi .6s ease-out forwards}}"
             "@keyframes fi{to{opacity:1}}</style>"
         )
+    else:
+        parts.append(f"<style>{CRISP_CSS}</style>")
 
     def fade(delay: float) -> str:
         return "" if static else (
@@ -709,10 +721,10 @@ def render_github_streak_svg(gh: dict, static: bool = False) -> str:
     ):
         parts.append(
             f'<g text-anchor="middle"{fade(delay)}>'
-            f'<text x="{cx}" y="76" font-size="30" font-weight="bold" '
+            f'<text x="{cx}" y="76" font-size="32" font-weight="bold" '
             f'fill="{INK}">{value}</text>'
-            f'<text x="{cx}" y="100" font-size="12" fill="{DIM}">{label}</text>'
-            f'<text x="{cx}" y="120" font-size="11" fill="{DIM}">{sub}</text>'
+            f'<text x="{cx}" y="100" font-size="13" font-weight="600" fill="{DIM}">{label}</text>'
+            f'<text x="{cx}" y="120" font-size="12" font-weight="500" fill="{DIM}">{sub}</text>'
             f"</g>"
         )
 
@@ -744,11 +756,11 @@ def render_github_streak_svg(gh: dict, static: bool = False) -> str:
     value, label, sub = center
     parts.append(
         f'<g text-anchor="middle"{fade(0.5)}>'
-        f'<text x="{cx}" y="{cy + 10}" font-size="34" font-weight="bold" '
+        f'<text x="{cx}" y="{cy + 10}" font-size="36" font-weight="bold" '
         f'fill="{ACCENT}">{value}</text>'
-        f'<text x="{cx}" y="{cy + R + 24}" font-size="12" '
+        f'<text x="{cx}" y="{cy + R + 24}" font-size="13" font-weight="600" '
         f'fill="{DIM}">{label}</text>'
-        f'<text x="{cx}" y="{cy + R + 42}" font-size="11" '
+        f'<text x="{cx}" y="{cy + R + 42}" font-size="12" font-weight="500" '
         f'fill="{DIM}">{sub}</text>'
         f"</g>"
     )
@@ -862,7 +874,8 @@ def render_highlights_svg(gh: dict, lc: dict, static: bool = False) -> str:
     op = "1" if static else "0"
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" '
-        f'height="{height}" viewBox="0 0 {W} {height}">',
+        f'height="{height}" viewBox="0 0 {W} {height}" text-rendering="geometricPrecision" shape-rendering="geometricPrecision">',
+        f"<style>{CRISP_CSS}</style>",
         "<defs>",
         '  <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">',
         '    <stop offset="0%" stop-color="#30363d"/>',
@@ -983,7 +996,8 @@ def render_info_card_svg(gh_data: dict, static: bool = False) -> str:
     op = "1" if static else "0"
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" '
-        f'height="{height}" viewBox="0 0 {W} {height}">',
+        f'height="{height}" viewBox="0 0 {W} {height}" text-rendering="geometricPrecision" shape-rendering="geometricPrecision">',
+        f"<style>{CRISP_CSS}</style>",
         "<defs>",
         '  <linearGradient id="barGrad" x1="0%" y1="0%" x2="100%" y2="0%">',
         '    <stop offset="0%" stop-color="#161b22"/>',
@@ -1007,7 +1021,7 @@ def render_info_card_svg(gh_data: dict, static: bool = False) -> str:
         '    <animate attributeName="x2" from="0%" to="140%" dur="2.4s" repeatCount="indefinite"/>',
         '  </linearGradient>',
         "</defs>",
-        f'<rect width="100%" height="100%" rx="8" fill="{BG}" stroke="{BORDER}" stroke-width="1"/>',
+        f'<rect width="100%" height="100%" rx="8" fill="{BG}" stroke="{BORDER}" stroke-width="1.2"/>',
         f'<path d="M1 9 a8 8 0 0 1 8-8 h{W - 18} a8 8 0 0 1 8 8 v{BAR_H - 9} h-{W - 2} z" fill="url(#barGrad)"/>',
         f'<line x1="1" y1="{BAR_H}" x2="{W - 1}" y2="{BAR_H}" stroke="{BORDER}" stroke-width="1"/>',
         f'<circle cx="20" cy="{BAR_H / 2}" r="5" fill="#f85149"/>',
