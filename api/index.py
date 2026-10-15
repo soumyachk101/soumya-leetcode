@@ -11,7 +11,7 @@ Endpoints:
 """
 
 import base64
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from html import escape
 import io
 import json
@@ -961,6 +961,10 @@ def render_info_card_svg(gh_data: dict, static: bool = False) -> str:
         ("Web", "soumya.pro · x.com/soumyachk1"),
     ]
 
+    ist = timezone(timedelta(hours=5, minutes=30))
+    now = datetime.now(ist)
+    kolkata_time = now.strftime("%I:%M %p IST").lstrip("0")
+
     right_col = [
         ("OS", "macOS · Linux · Windows"),
         ("Languages", "Rust · TypeScript · Swift · Python"),
@@ -968,7 +972,7 @@ def render_info_card_svg(gh_data: dict, static: bool = False) -> str:
         ("Storage", "SQLite · Local-First"),
         ("Workflow", "Parallel Git Worktrees"),
         ("Activity", activity),
-        ("Telemetry", "Kolkata, IN · UTC+5:30"),
+        ("Telemetry", f"Kolkata, IN · {kolkata_time}"),
     ]
 
     W = 860
@@ -1028,6 +1032,8 @@ def render_info_card_svg(gh_data: dict, static: bool = False) -> str:
         f'<circle cx="38" cy="{BAR_H / 2}" r="5" fill="#d29922"/>',
         f'<circle cx="56" cy="{BAR_H / 2}" r="5" fill="{ACCENT}"/>',
         f'<text x="{W / 2}" y="{BAR_H / 2 + 4.5}" fill="{DIM}" font-family="{FONT}" font-size="12" text-anchor="middle">{escape(TITLE)}</text>',
+        f'<circle cx="{W - 165}" cy="{BAR_H / 2}" r="3.5" fill="{ACCENT}"/>',
+        f'<text x="{W - 155}" y="{BAR_H / 2 + 4.2}" fill="{DIM}" font-family="{FONT}" font-size="11">Kolkata: <tspan fill="{INK}">{kolkata_time}</tspan></text>',
         f'<g font-family="{FONT}" font-size="{FS}" xml:space="preserve">',
     ]
 
