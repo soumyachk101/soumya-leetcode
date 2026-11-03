@@ -25,13 +25,13 @@ from bs4 import BeautifulSoup
 from PIL import Image
 import requests
 
-BG = "#0d1117"
-TRACK = "#161b22"
-BORDER = "#30363d"
-INK = "#c9d1d9"
-DIM = "#8b949e"
-ACCENT = "#3fb950"
-LC = {"Easy": "#00b8a3", "Medium": "#ffc01e", "Hard": "#ef4743"}
+BG = "#0a0a0f"
+TRACK = "#14141b"
+BORDER = "#2a2a34"
+INK = "#ece4d4"
+DIM = "#9a9488"
+ACCENT = "#d8a63f"
+LC = {"Easy": "#5e7d8a", "Medium": "#d8a63f", "Hard": "#b03a45"}
 FONT = "ui-monospace, SFMono-Regular, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Cascadia Mono', 'Segoe UI Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Roboto Mono', monospace"
 CRISP_CSS = "text{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:geometricPrecision;}image{image-rendering:-webkit-optimize-contrast;image-rendering:high-quality;}"
 
@@ -370,7 +370,7 @@ def render_streak_svg(d: dict, static: bool = False) -> str:
     return "\n".join(parts)
 
 
-GH_PALETTE = ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353", "#69f0a0"]
+GH_PALETTE = ["#14141b", "#3a2f1a", "#5c4620", "#8a6a2e", "#d8a63f", "#f2d489"]
 GH_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 GH_CELL = 13.0
 GH_GAP = 3.0
@@ -780,81 +780,81 @@ def render_highlights_svg(gh: dict, lc: dict, static: bool = False) -> str:
     items = [
         (
             "❯",
-            "#58a6ff",
-            '<tspan fill="#58a6ff" font-weight="bold">Ensembyte</tspan>'
-            '<tspan fill="#8b949e">: </tspan>'
-            '<tspan fill="#c9d1d9">multi-agent client with </tspan>'
-            '<tspan fill="#bc8cff" font-weight="600">Swift ∞ Hydra</tspan>'
-            '<tspan fill="#8b949e"> &amp; </tspan>'
-            '<tspan fill="#79c0ff" font-weight="600">GPUI CRDT</tspan>'
-            '<tspan fill="#c9d1d9"> engine</tspan>',
+            "#6b7f9c",
+            '<tspan fill="#6b7f9c" font-weight="bold">Ensembyte</tspan>'
+            '<tspan fill="#9a9488">: </tspan>'
+            '<tspan fill="#ece4d4">multi-agent client with </tspan>'
+            '<tspan fill="#d4606c" font-weight="600">Swift ∞ Hydra</tspan>'
+            '<tspan fill="#9a9488"> &amp; </tspan>'
+            '<tspan fill="#6b7f9c" font-weight="600">GPUI CRDT</tspan>'
+            '<tspan fill="#ece4d4"> engine</tspan>',
         ),
         (
             "❯",
-            "#58a6ff",
-            '<tspan fill="#58a6ff" font-weight="bold">Orbit</tspan>'
-            '<tspan fill="#8b949e">: </tspan>'
-            '<tspan fill="#c9d1d9">lightweight device engine driving </tspan>'
-            '<tspan fill="#f0883e" font-weight="600">Claude Code</tspan>'
-            '<tspan fill="#8b949e">, </tspan>'
-            '<tspan fill="#79c0ff" font-weight="600">Cursor</tspan>'
-            '<tspan fill="#8b949e"> &amp; </tspan>'
-            '<tspan fill="#a5d6ff" font-weight="600">Codex</tspan>',
+            "#6b7f9c",
+            '<tspan fill="#6b7f9c" font-weight="bold">Orbit</tspan>'
+            '<tspan fill="#9a9488">: </tspan>'
+            '<tspan fill="#ece4d4">lightweight device engine driving </tspan>'
+            '<tspan fill="#c07a3a" font-weight="600">Claude Code</tspan>'
+            '<tspan fill="#9a9488">, </tspan>'
+            '<tspan fill="#6b7f9c" font-weight="600">Cursor</tspan>'
+            '<tspan fill="#9a9488"> &amp; </tspan>'
+            '<tspan fill="#6b7f9c" font-weight="600">Codex</tspan>',
         ),
         (
             "❯",
-            "#58a6ff",
-            '<tspan fill="#58a6ff" font-weight="bold">SwarmAI</tspan>'
-            '<tspan fill="#8b949e">: </tspan>'
-            '<tspan fill="#c9d1d9">hybrid </tspan>'
-            '<tspan fill="#ffa657" font-weight="600">BM25</tspan>'
-            '<tspan fill="#8b949e"> + </tspan>'
-            '<tspan fill="#7ee787" font-weight="600">dense n-gram</tspan>'
-            '<tspan fill="#c9d1d9"> memory for </tspan>'
-            '<tspan fill="#d2a8ff" font-weight="600">parallel worktrees</tspan>',
+            "#6b7f9c",
+            '<tspan fill="#6b7f9c" font-weight="bold">SwarmAI</tspan>'
+            '<tspan fill="#9a9488">: </tspan>'
+            '<tspan fill="#ece4d4">hybrid </tspan>'
+            '<tspan fill="#c07a3a" font-weight="600">BM25</tspan>'
+            '<tspan fill="#9a9488"> + </tspan>'
+            '<tspan fill="#d8a63f" font-weight="600">dense n-gram</tspan>'
+            '<tspan fill="#ece4d4"> memory for </tspan>'
+            '<tspan fill="#d4606c" font-weight="600">parallel worktrees</tspan>',
         ),
         (
             "❯",
-            "#58a6ff",
-            '<tspan fill="#58a6ff" font-weight="bold">VERCODE</tspan>'
-            '<tspan fill="#8b949e">: </tspan>'
-            '<tspan fill="#c9d1d9">deterministic AI PR review · </tspan>'
-            '<tspan fill="#79c0ff" font-weight="600">Semgrep &amp; ESLint</tspan>'
-            '<tspan fill="#8b949e"> + </tspan>'
-            '<tspan fill="#bc8cff" font-weight="600">task-routed LLMs</tspan>',
+            "#6b7f9c",
+            '<tspan fill="#6b7f9c" font-weight="bold">VERCODE</tspan>'
+            '<tspan fill="#9a9488">: </tspan>'
+            '<tspan fill="#ece4d4">deterministic AI PR review · </tspan>'
+            '<tspan fill="#6b7f9c" font-weight="600">Semgrep &amp; ESLint</tspan>'
+            '<tspan fill="#9a9488"> + </tspan>'
+            '<tspan fill="#d4606c" font-weight="600">task-routed LLMs</tspan>',
         ),
         (
             "❯",
-            "#d29922",
-            '<tspan fill="#d29922" font-weight="bold">Credow</tspan>'
-            '<tspan fill="#8b949e">: </tspan>'
-            '<tspan fill="#c9d1d9">on-chain corporate credit on </tspan>'
-            '<tspan fill="#bc8cff" font-weight="600">Algorand</tspan>'
-            '<tspan fill="#8b949e"> · </tspan>'
-            '<tspan fill="#ff7b72" font-weight="600">x402 vault</tspan>'
-            '<tspan fill="#8b949e"> · </tspan>'
-            '<tspan fill="#e3b341" font-weight="bold">FusioniX&#x27;26 Joint Winner</tspan>',
+            "#d8a63f",
+            '<tspan fill="#d8a63f" font-weight="bold">Credow</tspan>'
+            '<tspan fill="#9a9488">: </tspan>'
+            '<tspan fill="#ece4d4">on-chain corporate credit on </tspan>'
+            '<tspan fill="#d4606c" font-weight="600">Algorand</tspan>'
+            '<tspan fill="#9a9488"> · </tspan>'
+            '<tspan fill="#b03a45" font-weight="600">x402 vault</tspan>'
+            '<tspan fill="#9a9488"> · </tspan>'
+            '<tspan fill="#f2d489" font-weight="bold">FusioniX&#x27;26 Joint Winner</tspan>',
         ),
         (
             "◈",
-            "#39d353",
-            '<tspan fill="#8b949e">Shipped </tspan>'
-            f'<tspan fill="#39d353" font-weight="bold">{gh_total:,}+</tspan>'
-            '<tspan fill="#c9d1d9"> GitHub contributions with </tspan>'
-            f'<tspan fill="#56d364" font-weight="bold">{gh_streak}-day</tspan>'
-            '<tspan fill="#c9d1d9"> continuous streak</tspan>',
+            "#d8a63f",
+            '<tspan fill="#9a9488">Shipped </tspan>'
+            f'<tspan fill="#d8a63f" font-weight="bold">{gh_total:,}+</tspan>'
+            '<tspan fill="#ece4d4"> GitHub contributions with </tspan>'
+            f'<tspan fill="#d8a63f" font-weight="bold">{gh_streak}-day</tspan>'
+            '<tspan fill="#ece4d4"> continuous streak</tspan>',
         ),
         (
             "◆",
-            "#ffa116",
-            '<tspan fill="#ffa116" font-weight="bold">LeetCode</tspan>'
-            '<tspan fill="#8b949e"> top tier: </tspan>'
-            f'<tspan fill="#e3b341" font-weight="bold">{lc_all}</tspan>'
-            '<tspan fill="#c9d1d9"> solved · </tspan>'
-            f'<tspan fill="#ff7b72" font-weight="bold">{lc_hard} Hard</tspan>'
-            '<tspan fill="#c9d1d9"> · </tspan>'
-            f'<tspan fill="#39d353" font-weight="bold">{lc_streak}-day</tspan>'
-            '<tspan fill="#c9d1d9"> max streak</tspan>',
+            "#c07a3a",
+            '<tspan fill="#c07a3a" font-weight="bold">LeetCode</tspan>'
+            '<tspan fill="#9a9488"> top tier: </tspan>'
+            f'<tspan fill="#d8a63f" font-weight="bold">{lc_all}</tspan>'
+            '<tspan fill="#ece4d4"> solved · </tspan>'
+            f'<tspan fill="#b03a45" font-weight="bold">{lc_hard} Hard</tspan>'
+            '<tspan fill="#ece4d4"> · </tspan>'
+            f'<tspan fill="#d8a63f" font-weight="bold">{lc_streak}-day</tspan>'
+            '<tspan fill="#ece4d4"> max streak</tspan>',
         ),
     ]
 
@@ -888,17 +888,17 @@ def render_highlights_svg(gh: dict, lc: dict, static: bool = False) -> str:
         f"<style>{CRISP_CSS}</style>",
         "<defs>",
         '  <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">',
-        '    <stop offset="0%" stop-color="#30363d"/>',
-        '    <stop offset="50%" stop-color="#238636" stop-opacity="0.7"/>',
-        '    <stop offset="100%" stop-color="#30363d"/>',
+        '    <stop offset="0%" stop-color="#2a2a34"/>',
+        '    <stop offset="50%" stop-color="#b03a45" stop-opacity="0.7"/>',
+        '    <stop offset="100%" stop-color="#2a2a34"/>',
         "  </linearGradient>",
         '  <linearGradient id="barGrad" x1="0%" y1="0%" x2="100%" y2="0%">',
-        '    <stop offset="0%" stop-color="#161b22"/>',
-        '    <stop offset="100%" stop-color="#0d1117"/>',
+        '    <stop offset="0%" stop-color="#14141b"/>',
+        '    <stop offset="100%" stop-color="#0a0a0f"/>',
         "  </linearGradient>",
         '  <radialGradient id="glow" cx="85%" cy="20%" r="50%">',
-        '    <stop offset="0%" stop-color="#238636" stop-opacity="0.08"/>',
-        '    <stop offset="100%" stop-color="#0d1117" stop-opacity="0"/>',
+        '    <stop offset="0%" stop-color="#d8a63f" stop-opacity="0.08"/>',
+        '    <stop offset="100%" stop-color="#0a0a0f" stop-opacity="0"/>',
         "  </radialGradient>",
         "</defs>",
         f'<rect width="100%" height="100%" rx="9" fill="{BG}" '
@@ -908,18 +908,18 @@ def render_highlights_svg(gh: dict, lc: dict, static: bool = False) -> str:
         f'v{BAR_H - 9} h-{W - 2} z" fill="url(#barGrad)"/>',
         f'<line x1="1" y1="{BAR_H}" x2="{W - 1}" y2="{BAR_H}" '
         f'stroke="{BORDER}" stroke-width="1"/>',
-        f'<circle cx="20" cy="{BAR_H / 2}" r="5" fill="#f85149"/>',
-        f'<circle cx="38" cy="{BAR_H / 2}" r="5" fill="#d29922"/>',
-        f'<circle cx="56" cy="{BAR_H / 2}" r="5" fill="{ACCENT}"/>',
+        f'<circle cx="20" cy="{BAR_H / 2}" r="5" fill="#b03a45"/>',
+        f'<circle cx="38" cy="{BAR_H / 2}" r="5" fill="#d8a63f"/>',
+        f'<circle cx="56" cy="{BAR_H / 2}" r="5" fill="#6b7f9c"/>',
         f'<text x="{W / 2}" y="{BAR_H / 2 + 4.5}" fill="{DIM}" '
         f'font-family="{FONT}" font-size="12" '
         f'text-anchor="middle">{escape(TITLE)}</text>',
         '<g>',
-        f'<rect x="{W - 130}" y="8" width="112" height="18" rx="9" fill="#12251a" stroke="#2ea043" stroke-width="0.8"/>',
-        f'<circle cx="{W - 118}" cy="17" r="3.5" fill="#39d353">',
+        f'<rect x="{W - 130}" y="8" width="112" height="18" rx="9" fill="#1c1c26" stroke="#b03a45" stroke-width="0.8"/>',
+        f'<circle cx="{W - 118}" cy="17" r="3.5" fill="#d8a63f">',
         '  <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>' if not static else "",
         '</circle>',
-        f'<text x="{W - 108}" y="20.5" fill="#39d353" font-family="{FONT}" font-size="9" font-weight="bold" letter-spacing="0.5">LIVE SYNC</text>',
+        f'<text x="{W - 108}" y="20.5" fill="#d8a63f" font-family="{FONT}" font-size="9" font-weight="bold" letter-spacing="0.5">LIVE SYNC</text>',
         '</g>',
         f'<g font-family="{FONT}" font-size="{FS}">',
     ]
@@ -938,17 +938,17 @@ def render_highlights_svg(gh: dict, lc: dict, static: bool = False) -> str:
     # Terminal prompt line at bottom with blinking cursor
     prompt_anim = anim(len(items))
     cursor_el = (
-        '<rect x="214" y="' + f"{y - 13:.1f}" + '" width="8" height="15" fill="#39d353">'
+        '<rect x="214" y="' + f"{y - 13:.1f}" + '" width="8" height="15" fill="#d8a63f">'
         '<animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>'
-        '</rect>' if not static else '<rect x="214" y="' + f"{y - 13:.1f}" + '" width="8" height="15" fill="#39d353"/>'
+        '</rect>' if not static else '<rect x="214" y="' + f"{y - 13:.1f}" + '" width="8" height="15" fill="#d8a63f"/>'
     )
     parts.append(
         f'<g opacity="{op}">'
         f'<text x="{PAD_X}" y="{y:.1f}">'
-        '<tspan fill="#3fb950" font-weight="bold">soumyachk101@github</tspan>'
-        '<tspan fill="#8b949e">:</tspan>'
-        '<tspan fill="#58a6ff">~</tspan>'
-        '<tspan fill="#8b949e">$ </tspan>'
+        '<tspan fill="#d8a63f" font-weight="bold">soumyachk101@github</tspan>'
+        '<tspan fill="#9a9488">:</tspan>'
+        '<tspan fill="#6b7f9c">~</tspan>'
+        '<tspan fill="#9a9488">$ </tspan>'
         f'</text>{cursor_el}{prompt_anim}</g>'
     )
 
@@ -1014,18 +1014,16 @@ def render_info_card_svg(gh_data: dict, static: bool = False) -> str:
         f"<style>{CRISP_CSS}</style>",
         "<defs>",
         '  <linearGradient id="barGrad" x1="0%" y1="0%" x2="100%" y2="0%">',
-        '    <stop offset="0%" stop-color="#161b22"/>',
-        '    <stop offset="100%" stop-color="#0d1117"/>',
+        '    <stop offset="0%" stop-color="#14141b"/>',
+        '    <stop offset="100%" stop-color="#0a0a0f"/>',
         "  </linearGradient>",
         '  <linearGradient id="spectrumBar" x1="0%" y1="0%" x2="100%" y2="0%">',
-        '    <stop offset="0%" stop-color="#161b22"/>',
-        '    <stop offset="10%" stop-color="#0e4429"/>',
-        '    <stop offset="25%" stop-color="#238636"/>',
-        '    <stop offset="40%" stop-color="#39d353"/>',
-        '    <stop offset="55%" stop-color="#56d4dd"/>',
-        '    <stop offset="70%" stop-color="#58a6ff"/>',
-        '    <stop offset="85%" stop-color="#bc8cff"/>',
-        '    <stop offset="100%" stop-color="#f0f6fc"/>',
+        '    <stop offset="0%" stop-color="#0a0a0f"/>',
+        '    <stop offset="12%" stop-color="#b03a45"/>',
+        '    <stop offset="40%" stop-color="#d8a63f"/>',
+        '    <stop offset="62%" stop-color="#f2d489"/>',
+        '    <stop offset="85%" stop-color="#6b7f9c"/>',
+        '    <stop offset="100%" stop-color="#93a7c4"/>',
         '  </linearGradient>',
         '  <linearGradient id="cuteBeam" x1="0%" y1="0%" x2="100%" y2="0%">',
         '    <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>',
@@ -1038,11 +1036,11 @@ def render_info_card_svg(gh_data: dict, static: bool = False) -> str:
         f'<rect width="100%" height="100%" rx="8" fill="{BG}" stroke="{BORDER}" stroke-width="1.2"/>',
         f'<path d="M1 9 a8 8 0 0 1 8-8 h{W - 18} a8 8 0 0 1 8 8 v{BAR_H - 9} h-{W - 2} z" fill="url(#barGrad)"/>',
         f'<line x1="1" y1="{BAR_H}" x2="{W - 1}" y2="{BAR_H}" stroke="{BORDER}" stroke-width="1"/>',
-        f'<circle cx="20" cy="{BAR_H / 2}" r="5" fill="#f85149"/>',
-        f'<circle cx="38" cy="{BAR_H / 2}" r="5" fill="#d29922"/>',
-        f'<circle cx="56" cy="{BAR_H / 2}" r="5" fill="{ACCENT}"/>',
+        f'<circle cx="20" cy="{BAR_H / 2}" r="5" fill="#b03a45"/>',
+        f'<circle cx="38" cy="{BAR_H / 2}" r="5" fill="#d8a63f"/>',
+        f'<circle cx="56" cy="{BAR_H / 2}" r="5" fill="#6b7f9c"/>',
         f'<text x="{W / 2}" y="{BAR_H / 2 + 4.5}" fill="{DIM}" font-family="{FONT}" font-size="12" text-anchor="middle">{escape(TITLE)}</text>',
-        f'<circle cx="{W - 165}" cy="{BAR_H / 2}" r="3.5" fill="{ACCENT}"/>',
+        f'<circle cx="{W - 165}" cy="{BAR_H / 2}" r="3.5" fill="#f2d489"/>',
         f'<text x="{W - 155}" y="{BAR_H / 2 + 4.2}" fill="{DIM}" font-family="{FONT}" font-size="11">Kolkata: <tspan fill="{INK}">{kolkata_time}</tspan></text>',
         f'<g font-family="{FONT}" font-size="{FS}" xml:space="preserve">',
     ]
@@ -1050,7 +1048,7 @@ def render_info_card_svg(gh_data: dict, static: bool = False) -> str:
     div_top = BAR_H + 16
     div_bot = height - 36
     parts.append(
-        f'<line x1="425" y1="{div_top}" x2="425" y2="{div_bot}" stroke="#21262d" stroke-dasharray="3 3"/>'
+        f'<line x1="425" y1="{div_top}" x2="425" y2="{div_bot}" stroke="#1c1c26" stroke-dasharray="3 3"/>'
     )
 
     y_start = BAR_H + 16 + LH * 0.75
@@ -1120,9 +1118,9 @@ def render_info_card_svg(gh_data: dict, static: bool = False) -> str:
     bar_h = 10
 
     orb_anim = "" if static else (
-        f'<circle cy="{bar_y + bar_h / 2:.1f}" r="4" fill="#39d353">'
+        f'<circle cy="{bar_y + bar_h / 2:.1f}" r="4" fill="#d8a63f">'
         f'<animate attributeName="cx" values="{bar_x + 8};{bar_x + bar_w - 8};{bar_x + 8}" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1; 0.45 0 0.55 1"/>'
-        f'<animate attributeName="fill" values="#39d353;#56d4dd;#58a6ff;#bc8cff;#39d353" dur="4s" repeatCount="indefinite"/>'
+        f'<animate attributeName="fill" values="#b03a45;#f2d489;#93a7c4;#d4606c" dur="4s" repeatCount="indefinite"/>'
         f'<animate attributeName="r" values="3.5;5;3.5" dur="1.2s" repeatCount="indefinite"/>'
         f'</circle>'
     )
@@ -1130,7 +1128,7 @@ def render_info_card_svg(gh_data: dict, static: bool = False) -> str:
 
     parts.append(
         f'<g opacity="{op}">'
-        f'<rect x="{bar_x}" y="{bar_y}" width="{bar_w}" height="{bar_h}" rx="5" fill="#161b22" stroke="#30363d" stroke-width="0.8"/>'
+        f'<rect x="{bar_x}" y="{bar_y}" width="{bar_w}" height="{bar_h}" rx="5" fill="#14141b" stroke="#2a2a34" stroke-width="0.8"/>'
         f'<rect x="{bar_x}" y="{bar_y}" width="{bar_w}" height="{bar_h}" rx="5" fill="url(#spectrumBar)" opacity="0.9"/>'
         f'{beam_layer}'
         f'{orb_anim}'
@@ -1151,29 +1149,29 @@ def landing_page(host: str, username: str) -> str:
 <title>Soumya Chakraborty · Real-Time Stats API</title>
 <style>
   body {{
-    background: #0d1117;
-    color: #c9d1d9;
+    background: #0a0a0f;
+    color: #ece4d4;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
     max-width: 900px;
     margin: 40px auto;
     padding: 0 20px;
   }}
-  h1 {{ color: #58a6ff; font-family: ui-monospace, monospace; font-size: 24px; }}
-  p {{ color: #8b949e; line-height: 1.6; }}
+  h1 {{ color: #d8a63f; font-family: ui-monospace, monospace; font-size: 24px; }}
+  p {{ color: #9a9488; line-height: 1.6; }}
   .card-wrap {{ margin: 30px 0; }}
   img {{ max-width: 100%; height: auto; border-radius: 8px; }}
   pre {{
-    background: #161b22;
-    border: 1px solid #30363d;
+    background: #14141b;
+    border: 1px solid #2a2a34;
     padding: 12px 16px;
     border-radius: 6px;
     overflow-x: auto;
-    color: #7ee787;
+    color: #f2d489;
     font-size: 13px;
   }}
   .badge {{
     display: inline-block;
-    background: #238636;
+    background: #b03a45;
     color: #fff;
     padding: 2px 8px;
     border-radius: 12px;
