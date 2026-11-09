@@ -64,7 +64,7 @@ DEFAULT_SOUMYA_CALENDAR = {"max_streak": 180, "active_days": 202}
 
 DATA_CACHE = {}  # username -> (timestamp, data)
 ICON_CACHE = {}  # url -> base64_png
-CACHE_TTL = 120  # 2 minutes
+CACHE_TTL = 60  # 1 minute
 
 
 def fetch_calendar_fallback(username: str) -> dict:
@@ -618,6 +618,7 @@ def fetch_github_contributions(username: str = "soumyachk101") -> dict:
             headers={
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
                 "Accept": "text/html,application/xhtml+xml",
+                "Cache-Control": "no-cache",
             },
             timeout=15,
         )
@@ -1303,7 +1304,7 @@ def landing_page(host: str, username: str) -> str:
 </head>
 <body>
   <h1>⚡ Soumya's Real-Time Stats API <span class="badge">LIVE</span></h1>
-  <p>Self-hosted, real-time animated SVG stats engine deployed on Vercel. Updates in real-time with 2-minute Edge caching.</p>
+  <p>Self-hosted, real-time animated SVG stats engine deployed on Vercel. Updates in real-time with 1-minute Edge caching.</p>
 
   <h3>1. LeetCode Progress Card</h3>
   <pre>&lt;img src="{base}/card.svg" width="860" /&gt;</pre>
@@ -1423,7 +1424,7 @@ def send_svg(svg_str: str, start_response):
         ("Content-Type", "image/svg+xml; charset=utf-8"),
         ("Content-Length", str(len(body))),
         ("Access-Control-Allow-Origin", "*"),
-        ("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300"),
+        ("Cache-Control", "public, max-age=60, s-maxage=60"),
     ]
     start_response(status, headers)
     return [body]
