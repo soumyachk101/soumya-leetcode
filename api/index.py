@@ -947,6 +947,16 @@ def render_highlights_svg(gh: dict, lc: dict, static: bool = False) -> str:
             '<tspan fill="#f2d489" font-weight="bold">FusioniX&#x27;26 Joint Winner</tspan>',
         ),
         (
+            "★",
+            "#93a7c4",
+            '<tspan fill="#93a7c4" font-weight="bold">Events</tspan>'
+            '<tspan fill="#9a9488">: </tspan>'
+            '<tspan fill="#ece4d4">ISRO BAH &#x27;26 </tspan>'
+            '<tspan fill="#9a9488">· </tspan>'
+            '<tspan fill="#d4606c" font-weight="600">AKI HACKS × Hacktoberfest &#x27;26</tspan>'
+            '<tspan fill="#9a9488"> (MLH · DEV · Kolkata)</tspan>',
+        ),
+        (
             "◈",
             "#d8a63f",
             '<tspan fill="#9a9488">Shipped </tspan>'
@@ -1078,7 +1088,7 @@ def render_info_card_svg(gh_data: dict, static: bool = False) -> str:
         ("Seeking", "Systems & DevTools roles"),
         ("Focus", "AI agent runtimes & engines"),
         ("Winner", "FusioniX'26 Joint Winner"),
-        ("Hackathons", "10+ shipped in 2026"),
+        ("Hackathons", "10+ shipped · Hacktoberfest '26"),
         ("Web", "soumya.pro · x.com/soumyachk1"),
     ]
 
