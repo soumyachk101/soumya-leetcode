@@ -36,22 +36,81 @@ FONT = "ui-monospace, SFMono-Regular, -apple-system, BlinkMacSystemFont, 'SF Pro
 CRISP_CSS = "text{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:geometricPrecision;}image{image-rendering:-webkit-optimize-contrast;image-rendering:high-quality;}"
 
 LEETCODE_GRAPHQL = "https://leetcode.com/graphql"
-QUERY = """
+CORE_QUERY = """
 query ($user: String!) {
   allQuestionsCount { difficulty count }
   matchedUser(username: $user) {
     username
     profile { ranking }
     submitStatsGlobal { acSubmissionNum { difficulty count } }
-    userCalendar { streak totalActiveDays activeYears }
     badges { name displayName icon creationDate }
+  }
+  userContestRanking(username: $user) {
+    badge { name }
   }
 }
 """
+CALENDAR_QUERY = """
+query ($user: String!) {
+  matchedUser(username: $user) {
+    userCalendar { streak totalActiveDays activeYears }
+  }
+}
+"""
+FALLBACK_LEETCODE_JSON_URL = (
+    "https://raw.githubusercontent.com/soumyachk101/soumyachk101/main/data/leetcode.json"
+)
+DEFAULT_SOUMYA_CALENDAR = {"max_streak": 180, "active_days": 202}
 
 DATA_CACHE = {}  # username -> (timestamp, data)
 ICON_CACHE = {}  # url -> base64_png
 CACHE_TTL = 120  # 2 minutes
+
+
+def fetch_calendar_fallback(username: str) -> dict:
+    cached = DATA_CACHE.get(username)
+    if cached:
+        prev_cal = cached[1].get("calendar") or {}
+        if prev_cal.get("max_streak") or prev_cal.get("active_days"):
+            return {
+                "max_streak": prev_cal.get("max_streak", 0),
+                "active_days": prev_cal.get("active_days", 0),
+            }
+    if username.lower() == "soumya-chk101":
+        try:
+            resp = requests.get(
+                FALLBACK_LEETCODE_JSON_URL,
+                timeout=5,
+                headers={"User-Agent": "soumya-leetcode-api/1.0"},
+            )
+            if resp.status_code == 200:
+                cal = resp.json().get("calendar") or {}
+                if cal.get("max_streak") or cal.get("active_days"):
+                    return {
+                        "max_streak": cal.get("max_streak", 0),
+                        "active_days": cal.get("active_days", 0),
+                    }
+        except Exception:
+            pass
+        return dict(DEFAULT_SOUMYA_CALENDAR)
+    return {"max_streak": 0, "active_days": 0}
+
+
+def pick_badge_label(d: dict) -> str:
+    best_days = 0
+    for b in d.get("badges", []):
+        m = re.search(r"(\d+)\s+Days\s+Badge", b.get("displayName", ""))
+        if m:
+            best_days = max(best_days, int(m.group(1)))
+    if best_days:
+        return f"{best_days} Days Badge"
+    contest_badge = (d.get("contest") or {}).get("badge") or ""
+    if contest_badge:
+        return contest_badge
+    badges = d.get("badges") or []
+    if badges:
+        return badges[0].get("displayName", "LeetCode")[:18]
+    return "Active Coder"
 
 
 def fetch_leetcode(username: str = "soumya-chk101") -> dict:
@@ -61,43 +120,71 @@ def fetch_leetcode(username: str = "soumya-chk101") -> dict:
         if now - ts < CACHE_TTL:
             return cached
 
+    headers = {
+        "Content-Type": "application/json",
+        "Referer": "https://leetcode.com",
+        "User-Agent": "soumya-leetcode-api/1.0",
+    }
+
     try:
         resp = requests.post(
             LEETCODE_GRAPHQL,
-            json={"query": QUERY, "variables": {"user": username}},
-            headers={
-                "Content-Type": "application/json",
-                "Referer": "https://leetcode.com",
-                "User-Agent": "soumya-leetcode-api/1.0",
-            },
+            json={"query": CORE_QUERY, "variables": {"user": username}},
+            headers=headers,
             timeout=15,
         )
         resp.raise_for_status()
-        res = resp.json().get("data", {})
+        res = resp.json().get("data") or {}
         matched = res.get("matchedUser")
         if not matched:
             if username in DATA_CACHE:
                 return DATA_CACHE[username][1]
             raise ValueError(f"User {username} not found")
 
-        totals = {q["difficulty"]: q["count"] for q in res.get("allQuestionsCount", [])}
+        totals = {q["difficulty"]: q["count"] for q in (res.get("allQuestionsCount") or [])}
         solved = {
             s["difficulty"]: s["count"]
-            for s in matched.get("submitStatsGlobal", {}).get("acSubmissionNum", [])
+            for s in ((matched.get("submitStatsGlobal") or {}).get("acSubmissionNum") or [])
         }
-        cal = matched.get("userCalendar") or {}
         badges = matched.get("badges") or []
-        ranking = matched.get("profile", {}).get("ranking", 0)
+        ranking = (matched.get("profile") or {}).get("ranking") or 0
+        contest = res.get("userContestRanking") or {}
+        contest_badge = (contest.get("badge") or {}).get("name") or ""
+
+        cal_data = None
+        try:
+            cresp = requests.post(
+                LEETCODE_GRAPHQL,
+                json={"query": CALENDAR_QUERY, "variables": {"user": username}},
+                headers=headers,
+                timeout=10,
+            )
+            if cresp.status_code == 200:
+                cmatched = (cresp.json().get("data") or {}).get("matchedUser") or {}
+                ucal = cmatched.get("userCalendar")
+                if ucal:
+                    cal_data = {
+                        "max_streak": ucal.get("streak", 0),
+                        "active_days": ucal.get("totalActiveDays", 0),
+                    }
+        except Exception:
+            pass
+
+        if cal_data is None:
+            cal_data = fetch_calendar_fallback(username)
+
+        for b in badges:
+            m = re.search(r"(\d+)\s+Days\s+Badge", b.get("displayName", ""))
+            if m and cal_data.get("active_days", 0) < int(m.group(1)):
+                cal_data["active_days"] = int(m.group(1))
 
         data = {
             "username": username,
             "ranking": ranking,
             "totals": totals,
             "solved": solved,
-            "calendar": {
-                "max_streak": cal.get("streak", 0),
-                "active_days": cal.get("totalActiveDays", 0),
-            },
+            "contest": {"badge": contest_badge},
+            "calendar": cal_data,
             "badges": badges,
         }
         DATA_CACHE[username] = (now, data)
@@ -194,9 +281,9 @@ def render_card_svg(d: dict, static: bool = False) -> str:
         f"</g>"
     )
 
-    bx = 268.0
-    bar_w = 200.0
-    count_x = bx + 60 + bar_w + 92
+    bx = 232.0
+    bar_w = 186.0
+    count_x = bx + 78 + bar_w + 94
     y = 62.0
     for i, name in enumerate(order):
         s_count = solved.get(name, 0)
@@ -216,7 +303,7 @@ def render_card_svg(d: dict, static: bool = False) -> str:
         )
         y += 42
 
-    rx = count_x + 34
+    rx = count_x + 32
     parts.append(
         f'<line x1="{rx - 18}" y1="34" x2="{rx - 18}" y2="{h - 34}" stroke="{BORDER}" stroke-width="1"/>'
     )
@@ -225,24 +312,23 @@ def render_card_svg(d: dict, static: bool = False) -> str:
         f'<text x="{rx}" y="72" font-size="34" font-weight="bold" fill="{ACCENT}">{streak}</text>'
         f'<text x="{rx}" y="94" font-size="13" font-weight="600" fill="{DIM}">day max streak</text>'
     )
-    badge_label = "100 Days Badge"
-    bw = 9.5 * len(badge_label) + 24
+    badge_label = pick_badge_label(d)
+    bw = 9.0 * len(badge_label) + 24
     parts.append(
         f'<rect x="{rx}" y="112" width="{bw}" height="26" rx="13" fill="none" stroke="{ACCENT}" stroke-width="1.2"/>'
-        f'<text x="{rx + bw / 2}" y="{129}" font-size="13" font-weight="bold" fill="{ACCENT}" text-anchor="middle">{badge_label}</text>'
-        f'<text x="{rx}" y="{166}" font-size="12" font-weight="500" fill="{DIM}">rank #{ranking:,} &#183; {active_days} active days</text>'
+        f'<text x="{rx + bw / 2}" y="{129}" font-size="12" font-weight="bold" fill="{ACCENT}" text-anchor="middle">{escape(badge_label)}</text>'
+        f'<text x="{rx}" y="{166}" font-size="11" font-weight="500" fill="{DIM}">rank #{ranking:,} &#183; {active_days} active days</text>'
         f"</g>"
     )
     parts.append(
-        f'<text x="{w - 20}" y="{h - 14}" font-size="11" fill="{DIM}" text-anchor="end">leetcode.com/u/{d["username"]}</text>'
+        f'<text x="{w - 20}" y="{h - 14}" font-size="11" fill="{DIM}" text-anchor="end">leetcode.com/u/{escape(d["username"])}</text>'
     )
     parts.append("</g></svg>")
     return "\n".join(parts)
 
 
 def render_badges_svg(d: dict, static: bool = False) -> str:
-    w, h = 860, 168
-    icon_sz = 64
+    w = 860
 
     def sort_key(b: dict) -> tuple:
         rank = {"Knight": 0, "Guardian": 0, "Annual Badge": 1, "Daily Coding Challenge": 2}
@@ -256,9 +342,24 @@ def render_badges_svg(d: dict, static: bool = False) -> str:
         if disp not in seen:
             seen.add(disp)
             dedup.append(b)
-    badges = dedup or badges[:5]
+    badges = dedup or badges
 
-    slot = (w - 40) / max(len(badges), 1)
+    n = len(badges)
+    if n <= 8:
+        rows = [badges] if badges else []
+        h = 168
+        icon_sz = 58 if n >= 7 else 64
+        name_fs = 10.5 if n >= 8 else (11.5 if n == 7 else 13.0)
+        date_fs = 9.0 if n >= 8 else (10.0 if n == 7 else 11.5)
+    else:
+        mid = (n + 1) // 2
+        rows = [badges[:mid], badges[mid:]]
+        h = 290
+        per_row = max(len(r) for r in rows)
+        icon_sz = 54 if per_row >= 6 else 60
+        name_fs = 11.0 if per_row >= 6 else 12.0
+        date_fs = 9.5 if per_row >= 6 else 10.5
+
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" text-rendering="geometricPrecision" shape-rendering="geometricPrecision">',
         f'<rect width="100%" height="100%" rx="8" fill="{BG}" stroke="{BORDER}" stroke-width="1.2"/>',
@@ -271,28 +372,37 @@ def render_badges_svg(d: dict, static: bool = False) -> str:
         parts.append(f"<style>{CRISP_CSS}</style>")
 
     parts.append(f'<g font-family="{FONT}" text-anchor="middle">')
-    for i, b in enumerate(badges):
-        cx = 20 + slot * i + slot / 2
-        b64 = fetch_icon_b64(b.get("icon", ""))
-        anim = "" if static else f' class="f" style="animation-delay:{0.15 + i * 0.12:.2f}s"'
-        short_name = (
-            b.get("displayName", "").replace(" Badge", "").replace(" LeetCoding Challenge", "")
-        )
-        parts.append(f"<g{anim}>")
-        if b64:
-            parts.append(
-                f'<image x="{cx - icon_sz / 2:.0f}" y="24" width="{icon_sz}" height="{icon_sz}" '
-                f'style="image-rendering:-webkit-optimize-contrast;image-rendering:high-quality;" '
-                f'href="data:image/png;base64,{b64}"/>'
+    if not rows:
+        parts.append(f'<text x="{w / 2}" y="{h / 2}" font-size="13" fill="{DIM}">No badges earned yet</text>')
+    idx = 0
+    for r_i, row in enumerate(rows):
+        y_top = 24 + r_i * 124
+        slot = (w - 40) / len(row)
+        for c_i, b in enumerate(row):
+            cx = 20 + slot * c_i + slot / 2
+            b64 = fetch_icon_b64(b.get("icon", ""))
+            anim = "" if static else f' class="f" style="animation-delay:{0.15 + idx * 0.12:.2f}s"'
+            short_name = (
+                b.get("displayName", "").replace(" Badge", "").replace(" LeetCoding Challenge", "")
             )
-        parts.append(
-            f'<text x="{cx:.0f}" y="116" font-size="13" font-weight="600" fill="{INK}">{escape(short_name)}</text>'
-            f'<text x="{cx:.0f}" y="134" font-size="11.5" font-weight="500" fill="{DIM}">{escape(b.get("creationDate", ""))}</text>'
-            f"</g>"
-        )
+            parts.append(f"<g{anim}>")
+            if b64:
+                parts.append(
+                    f'<image x="{cx - icon_sz / 2:.0f}" y="{y_top}" width="{icon_sz}" height="{icon_sz}" '
+                    f'style="image-rendering:-webkit-optimize-contrast;image-rendering:high-quality;" '
+                    f'href="data:image/png;base64,{b64}"/>'
+                )
+            label_y = y_top + icon_sz + 28
+            date_y = label_y + 18
+            parts.append(
+                f'<text x="{cx:.0f}" y="{label_y}" font-size="{name_fs}" font-weight="600" fill="{INK}">{escape(short_name)}</text>'
+                f'<text x="{cx:.0f}" y="{date_y}" font-size="{date_fs}" font-weight="500" fill="{DIM}">{escape(b.get("creationDate", ""))}</text>'
+                f"</g>"
+            )
+            idx += 1
 
     parts.append(
-        f'<text x="{w - 20}" y="{h - 14}" font-size="11" fill="{DIM}" text-anchor="end">leetcode.com/u/{d["username"]}</text>'
+        f'<text x="{w - 20}" y="{h - 14}" font-size="11" fill="{DIM}" text-anchor="end">leetcode.com/u/{escape(d["username"])}</text>'
     )
     parts.append("</g></svg>")
     return "\n".join(parts)
@@ -304,9 +414,9 @@ def render_streak_svg(d: dict, static: bool = False) -> str:
     active_days = cal.get("active_days", 0)
     max_streak = cal.get("max_streak", 0)
     solved = d.get("solved", {})
-    solved_all = solved.get("All", 0)
     hard = solved.get("Hard", 0)
     med = solved.get("Medium", 0)
+    solved_all = solved.get("All", solved.get("Easy", 0) + med + hard)
 
     left = (str(active_days), "total active days", "on leetcode")
     center = (str(max_streak), "day max streak", "consistent problem solving")
@@ -773,9 +883,10 @@ def render_highlights_svg(gh: dict, lc: dict, static: bool = False) -> str:
     gh_total = gh.get("total", 8000)
     gh_streak = gh.get("current_streak", gh.get("longest_streak", 195))
 
-    lc_all = lc.get("solved", {}).get("All", 302)
-    lc_hard = lc.get("solved", {}).get("Hard", 68)
-    lc_streak = lc.get("calendar", {}).get("max_streak", 155)
+    lc_solved = lc.get("solved", {})
+    lc_hard = lc_solved.get("Hard", 77)
+    lc_all = lc_solved.get("All", lc_solved.get("Easy", 0) + lc_solved.get("Medium", 0) + lc_hard) if lc_solved else 358
+    lc_streak = lc.get("calendar", {}).get("max_streak", 180)
 
     items = [
         (
