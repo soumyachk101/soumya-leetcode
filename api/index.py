@@ -1088,7 +1088,7 @@ def render_info_card_svg(gh_data: dict, static: bool = False) -> str:
         ("Seeking", "Systems & DevTools roles"),
         ("Focus", "AI agent runtimes & engines"),
         ("Winner", "FusioniX'26 Joint Winner"),
-        ("Hackathons", "12+ shipped · Hacktoberfest '26"),
+        ("Hackathons", "15+ shipped · Hacktoberfest '26"),
         ("Web", "soumya.pro · x.com/soumyachk1"),
     ]
 
