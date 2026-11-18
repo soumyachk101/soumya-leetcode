@@ -1090,7 +1090,7 @@ def render_info_card_svg(gh_data: dict, static: bool = False) -> str:
         ("Focus", "AI agent runtimes & engines"),
         ("Winner", "FusioniX'26 Joint Winner"),
         ("Hackathons", "15+ shipped · Hacktoberfest '26"),
-        ("Web", "soumya.pro · x.com/soumyachk1"),
+        ("Web", "soumyachakraborty.dev"),
     ]
 
     ist = timezone(timedelta(hours=5, minutes=30))
