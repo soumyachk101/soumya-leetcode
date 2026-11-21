@@ -955,7 +955,8 @@ def render_highlights_svg(gh: dict, lc: dict, static: bool = False) -> str:
             '<tspan fill="#ece4d4">ISRO BAH &#x27;26 </tspan>'
             '<tspan fill="#9a9488">· </tspan>'
             '<tspan fill="#d4606c" font-weight="600">AKI HACKS × Hacktoberfest &#x27;26</tspan>'
-            '<tspan fill="#9a9488"> (MLH · DEV · Kolkata)</tspan>',
+            '<tspan fill="#9a9488"> · </tspan>'
+            '<tspan fill="#93a7c4" font-weight="600">SWOC Season 7</tspan>',
         ),
         (
             "◈",
